@@ -1,4 +1,5 @@
 import numpy as np
+from itertools import product
 
 
 def print_solution(sol: np.ndarray[int, int]) -> None:
@@ -64,6 +65,19 @@ def linalg_solve_Z2(A: np.matrix[int], b: np.ndarray[int]) -> np.ndarray[int]:
                 r_zero_num += 1
                 print(M)
 
+                shape = (2**r_zero_num, M.shape[1] - 1)
+                solutions = np.zeros(shape, dtype=int)
+                solutions[:, -r_zero_num:] = tuple(product({0, 1}, repeat=r_zero_num))
+                print(solutions)
+
+                # TODO niech zwraca prawidłowy pierwszy rząd
+                toZ2 = lambda v: v % 2
+                for solution in solutions:
+                    for row in reversed(np.arange(len(M - r_zero_num))):
+                        solution[row] = toZ2(sum(M[row, (row + 1) : -1] * solution[(row + 1) :]))
+                        solution[row] ^= M[row, -1]
+
+                print(solutions)
 
                 return None
             # swap rows
