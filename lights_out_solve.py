@@ -99,7 +99,7 @@ def linalg_solve_Z2(A: np.matrix[int], b: np.ndarray[int]) -> np.ndarray[int, in
         solution[row] = toZ2(sum(M[row, (row + 1) : -1] * solution[(row + 1) :]))
         solution[row] ^= M[row, -1]
 
-    return solution
+    return np.array(solution, ndmin=2)
 
 
 # FIND MATRIX TO SOLVING LINEAR EQUATION
@@ -175,7 +175,7 @@ def solve(
 
 
 def main() -> None:
-    actual_state = np.array([[0, 1, 1, 0, 1], [0, 0, 0, 0, 0]])
+    actual_state = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]])
     destination_state = np.zeros(actual_state.shape, dtype=int)
     solutions = solve(actual_state, destination_state)
 
