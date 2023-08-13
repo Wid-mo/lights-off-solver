@@ -175,7 +175,7 @@ def solve(
 
 
 def main() -> None:
-    actual_state = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]])
+    actual_state = np.array([[1, 1]])
     destination_state = np.zeros(actual_state.shape, dtype=int)
     solutions = solve(actual_state, destination_state)
 
@@ -189,15 +189,27 @@ if __name__ == "__main__":
 
 # ------------------------------------------------------------------------------------
 # TESTING
-# np.testing.assert_array_almost_equal(
-#     get_solution_from_solved_first_row(
-#         np.array([1, 0, 0, 0]),
-#         np.array([[1, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 1]]),
-#         np.zeros((4, 4), dtype=int),
-#     ),
-#     np.array([[1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 1]]),
-# )
-# np.testing.assert_array_equal(
-#     solve(np.array([[1, 1, 0], [1, 0, 1], [0, 0, 1]]), np.zeros((3, 3), dtype=int)),
-#     np.array([[0, 1, 1], [0, 1, 0], [0, 0, 1]]),
-# )
+# method: get_solution_from_solved_first_row
+np.testing.assert_array_almost_equal(
+    get_solution_from_solved_first_row(
+        np.array([1, 0, 0, 0]),
+        np.array([[1, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 1]]),
+        np.zeros((4, 4), dtype=int),
+    ),
+    np.array([[1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 1]]),
+)
+# solve for more complicated example
+np.testing.assert_array_equal(
+    solve(np.array([[1, 1, 0], [1, 0, 1], [0, 0, 1]]), np.zeros((3, 3), dtype=int)),
+    np.array([[[0, 1, 1], [0, 1, 0], [0, 0, 1]]]),
+)
+# solve for one solution
+np.testing.assert_array_equal(
+    solve(np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]), np.zeros((3, 3), dtype=int)),
+    np.array([[[1, 0, 1], [0, 1, 0], [1, 0, 1]]]),
+)
+# solve for many solutions
+np.testing.assert_array_equal(
+    solve(np.array([[1, 1]]), np.zeros((1, 2), dtype=int)),
+    np.array([[[1, 0]], [[0, 1]]])
+)
