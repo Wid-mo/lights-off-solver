@@ -51,35 +51,47 @@ def get_solution_from_solved_first_row(
     return solution
 
 
+def get_solutions_from_matrix_in_row_Echelon_form(
+    M: np.ndarray[int, int], r_zero_num: int = 0
+) -> np.ndarray[int, int]:
+    # no solution (contradictory arrangement)
+    if any(M[-1, M.shape[0] - r_zero_num :] == 1):
+        return []
+
+    # number of solutions depends on number of rows with zeros
+    shape = (2**r_zero_num, M.shape[1] - 1)
+    solutions = np.zeros(shape, dtype=int)
+    solutions[:, -r_zero_num:] = tuple(product({0, 1}, repeat=r_zero_num))
+
+    toZ2 = lambda v: v % 2
+    for solution in solutions:
+        for row in reversed(range(len(M) - r_zero_num)):
+            solution[row] = toZ2(sum(M[row, (row + 1) : -1] * solution[(row + 1) :]))
+            solution[row] ^= M[row, -1]
+
+    return solutions
+
+
+def transform_matrix_to_row_Echelon_form(
+    M: np.ndarray[int, int], from_col: int = 0
+) -> (np.ndarray[int, int], int):
+    # TODO
+    return M, 1
+
+
 def linalg_solve_Z2(A: np.matrix[int], b: np.ndarray[int]) -> np.ndarray[int, int]:
     M = np.empty(shape=(A.shape[0], A.shape[1] + 1), dtype=int)
     M[:, :-1] = A
     M[:, -1] = b
 
-    # Gauss elimination to row Echelon form
-    r_zero_num = 0  # number rows of zeros
-    for r1, _ in enumerate(
-        M.diagonal()
-    ):  # we can't iterate along diagonal because no sure that unique solution
+    # Gauss elimination
+    for r1, _ in enumerate(M.diagonal()):
         if M[r1, r1] == 0:
             # if not unique solution
             if all(M[r1 + 1 :, r1] == 0):
-                r_zero_num += 1
+                M, r_zero_num = transform_matrix_to_row_Echelon_form(M, from_col=r1)
+                return get_solutions_from_matrix_in_row_Echelon_form(M, r_zero_num)
 
-                # number of solutions depends on number of rows with zeros
-                shape = (2**r_zero_num, M.shape[1] - 1)
-                solutions = np.zeros(shape, dtype=int)
-                solutions[:, -r_zero_num:] = tuple(product({0, 1}, repeat=r_zero_num))
-
-                toZ2 = lambda v: v % 2
-                for solution in solutions:
-                    for row in reversed(np.arange(len(M) - r_zero_num)):
-                        solution[row] = toZ2(
-                            sum(M[row, (row + 1) : -1] * solution[(row + 1) :])
-                        )
-                        solution[row] ^= M[row, -1]
-
-                return solutions
             # swap rows
             r2 = np.where(M[r1 + 1 :, r1] == 1)[0][0] + (r1 + 1)
             M[[r1, r2]] = M[[r2, r1]]
@@ -87,15 +99,12 @@ def linalg_solve_Z2(A: np.matrix[int], b: np.ndarray[int]) -> np.ndarray[int, in
         # zeros all cells in column below r1
         M[r1 + 1 :][M[r1 + 1 :, r1] == 1] ^= M[r1]
 
-        # save number of zeroes row
-        # TODO
-        r = M.shape[0] - r1
-
     toZ2 = lambda v: v % 2
+
 
     # get solution from M
     solution = np.zeros(M.shape[1] - 1, dtype=int)
-    for row in reversed(np.arange(len(M))):
+    for row in reversed(range(len(M))):
         solution[row] = toZ2(sum(M[row, (row + 1) : -1] * solution[(row + 1) :]))
         solution[row] ^= M[row, -1]
 
@@ -155,6 +164,13 @@ def get_matrix_contains_vectors_from_each_cell(
 def solve(
     actual_state: np.ndarray[int, int], destination_state: np.ndarray[int, int]
 ) -> np.ndarray[np.ndarray[int, int]]:
+    """
+    Returns list of 2d solutions.
+
+    Example:
+    >>> solve(np.array([[1, 1]]), np.zeros((1, 2), dtype=int))
+    array([[[1, 0]], [[0, 1]]])
+    """
     virtual_row = get_matrix_contains_vectors_from_each_cell(
         actual_state, destination_state
     )[
@@ -175,13 +191,11 @@ def solve(
 
 
 def main() -> None:
-    actual_state = np.array([[1, 1]])
+    actual_state = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]])
     destination_state = np.zeros(actual_state.shape, dtype=int)
     solutions = solve(actual_state, destination_state)
 
     print(solutions)
-    # print("No solutions") if not solutions else None
-    # print_solution(solutions) if len(solutions) == 1 else None
 
 
 if __name__ == "__main__":
@@ -211,5 +225,9 @@ np.testing.assert_array_equal(
 # solve for many solutions
 np.testing.assert_array_equal(
     solve(np.array([[1, 1]]), np.zeros((1, 2), dtype=int)),
-    np.array([[[1, 0]], [[0, 1]]])
+    np.array([[[1, 0]], [[0, 1]]]),
+)
+# solve for no solution
+np.testing.assert_array_equal(
+    solve(np.array([[1, 0]]), np.zeros((1, 2), dtype=int)), []
 )
