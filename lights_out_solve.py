@@ -75,8 +75,26 @@ def get_solutions_from_matrix_in_row_Echelon_form(
 def transform_matrix_to_row_Echelon_form(
     M: np.ndarray[int, int], from_col: int = 0
 ) -> (np.ndarray[int, int], int):
-    # TODO
-    return M, 1
+    RIGHT = (0, 1)
+    RIGHT_DOWN = (1, 1)
+    r_zero_num = 1
+    pivot = (from_col, from_col + 1)
+
+    for _ in range(pivot[1], M.shape[1] - 1):
+        if all(M[pivot[0], pivot[1] :] == 0):
+            r_zero_num += 1
+            pivot += RIGHT
+            continue
+
+        # swap rows and clear all cells below pivot
+        r1 = pivot[0]
+        r2 = np.where(M[r1 + 1 :, r1] == 1)[0][0] + (r1 + 1)
+        M[[r1, r2]] = M[[r2, r1]]
+        M[r1 + 1 :][M[r1 + 1 :, r1] == 1] ^= M[r1]
+
+        pivot += RIGHT_DOWN
+
+    return M, r_zero_num
 
 
 def linalg_solve_Z2(A: np.matrix[int], b: np.ndarray[int]) -> np.ndarray[int, int]:
@@ -100,7 +118,6 @@ def linalg_solve_Z2(A: np.matrix[int], b: np.ndarray[int]) -> np.ndarray[int, in
         M[r1 + 1 :][M[r1 + 1 :, r1] == 1] ^= M[r1]
 
     toZ2 = lambda v: v % 2
-
 
     # get solution from M
     solution = np.zeros(M.shape[1] - 1, dtype=int)
@@ -191,7 +208,7 @@ def solve(
 
 
 def main() -> None:
-    actual_state = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]])
+    actual_state = np.ones((3, 3), dtype=int)
     destination_state = np.zeros(actual_state.shape, dtype=int)
     solutions = solve(actual_state, destination_state)
 
@@ -230,4 +247,8 @@ np.testing.assert_array_equal(
 # solve for no solution
 np.testing.assert_array_equal(
     solve(np.array([[1, 0]]), np.zeros((1, 2), dtype=int)), []
+)
+# 4x4 where each first row combination is a solution
+np.testing.assert_equal(
+    len(solve(np.ones((4, 4), dtype=int), np.zeros((4, 4), dtype=int))), 16
 )
