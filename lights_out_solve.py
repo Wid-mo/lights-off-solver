@@ -208,10 +208,11 @@ def solve(
 
 
 def main() -> None:
-    actual_state = np.ones((3, 3), dtype=int)
+    actual_state = np.ones((4, 4), dtype=int)
     destination_state = np.zeros(actual_state.shape, dtype=int)
     solutions = solve(actual_state, destination_state)
 
+    print(min(solutions, key=lambda solution: np.count_nonzero(solution)))
     print(solutions)
 
 
