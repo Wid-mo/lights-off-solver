@@ -45,10 +45,7 @@ for row, row_cells in enumerate(cells):
         cell.grid(row=row, column=col, sticky="nswe")
 
 
-def toggle_app_mode():
-    # change Button text to "Editor"
-    toogle_game_mode_btn.configure(text="Editor")
-    # change behaviour of cells buttons
+def get_neightbours_cells(row, col):
     SHIFTS = (0, 1), (1, 0), (-1, 0), (0, -1)
     is_inside_board = (
         lambda board, row, col: row >= 0
@@ -56,50 +53,41 @@ def toggle_app_mode():
         and row < len(board)
         and col < len(board[0])
     )
+    add_tuples = lambda t1, t2: (t1[0] + t2[0], t1[1] + t2[1])
+
+    neightbours_cell_indexes = (
+        add_tuples(t1, t2) for t1, t2 in product([(row, col)], SHIFTS)
+    )  # (row, col) + SHIFTS
+    return (
+        cells[row_][col_]
+        for row_, col_ in neightbours_cell_indexes
+        if is_inside_board(cells, row_, col_)
+    )
+
+
+def toggle_app_mode():
+    # change behaviour of cells buttons
     for row, row_cells in enumerate(cells):
         for col, cell in enumerate(row_cells):
-            # add_tuples = lambda t1,t2: (t1[0]+t2[0], t1[1]+t2[1])
-            # neightbours_cell_indexes = (add_tuples(t1, t2) for t1,t2 in product([(row, col)], SHIFTS))
-            # # neightbours_cell_indexes = tuple(
-            # #     tuple(map(add, t1, t2)) for t1, t2 in product([(row, col)], SHIFTS)
-            # # )  # (row, col) + SHIFTS
-
-            # print(neightbours_cell_indexes) if row == 1 and col == 2 else ...
-            # neightbours_cell_indexes2 = tuple((row_, col_) for row_, col_ in neightbours_cell_indexes if is_inside_board(cells, row_, col_))
-            # print(neightbours_cell_indexes2) if row == 1 and col == 2 else ...
-
-            # # neightbours_cells = (cells[row_][col_] for row_, col_ in neightbours_cell_indexes if is_inside_board(cells, row_, col_))
-            # # neightbours_cells = tuple(cells[row_][col_] for row_, col_ in neightbours_cell_indexes2)
-            # print(neightbours_cells) if row == 1 and col == 2 else ...
-            # neightbours_cells = (cells[a][b] for a,b in neightbours_cell_indexes2)
-
-
-
-            neightbours_cell_indexes = [(row+t[0], col+t[1]) for t in SHIFTS]
-            neightbours_cell_indexes2 = [t for t in neightbours_cell_indexes if is_inside_board(cells, t[0], t[1])]
-            # print(tuple(neightbours_cell_indexes2)) if row == 1 and col == 2 else ...
-
-            neightbours_cells = (cells[t[0]][t[1]] for t in neightbours_cell_indexes2)
-            print(tuple(neightbours_cells)) if row == 1 and col == 2 else ...
-
-
             cell.configure(
-                command=lambda btn=cell: [
+                command=lambda btn=cell, r=row, c=col: [
                     c.configure(
-                        bg="yellow"
-                        # bg="yellow" if c.cget("bg") == "lightgray" else "lightgray",
-                        # text=c.cget("text") if c is not btn
-                        # else "⭕" if btn.cget("text") == " " else " ",
+                        bg="yellow" if c.cget("bg") == "lightgray" else "lightgray",
+                        text=c.cget("text")
+                        if c is not btn
+                        else "⭕"
+                        if btn.cget("text") == " "
+                        else " ",
                     )
-                    for c in neightbours_cells
+                    for c in [*get_neightbours_cells(r, c), btn]
                 ]
-                # command=lambda btn=cell: btn.configure(
-                #     bg="yellow" if btn.cget("bg") == "lightgray" else "lightgray"
-                # )
-                # command=lambda btn=cell: cells[0][0].configure(bg="yellow")
-                # command=lambda btn=cell: [c.configure(bg="yellow") for c in neightbours_cells]
             )
+
+
+
     # hide 3 Buttons and show 1 button
+    # change Button text to "Editor"
+    toogle_game_mode_btn.configure(text="Editor")
 
 
 def mark_cells():
