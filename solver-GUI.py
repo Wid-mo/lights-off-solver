@@ -1,27 +1,53 @@
 from tkinter import *
-from tkinter import ttk
 from numpy import zeros, array, count_nonzero
 from lights_out_solve import solve
-from operator import add
 from itertools import product
-
+from random import random
 
 window = Tk()
 window.title("Lights off solver")
 window.geometry("{}x{}".format(45 * 9, 45 * 16))
 
+is_solution_clicked = False
+
 # top toolbar
 toolbar_frm = Frame(window)
 toolbar_frm.pack(fill="x")
-Button(toolbar_frm, text="reset").pack(side="left", fill="both", expand=True, ipady=10)
-Button(toolbar_frm, text="fill all cells").pack(
-    side="left", fill="both", expand=True, ipady=10
+b1 = Button(
+    toolbar_frm,
+    text="reset",
+    command=lambda: [
+        [cell.configure(bg="lightgray", text=" ") for cell in row_cell]
+        for row_cell in cells
+    ],
 )
-Button(toolbar_frm, text="random").pack(side="left", fill="both", expand=True, ipady=10)
+b2 = Button(
+    toolbar_frm,
+    text="fill all cells",
+    command=lambda: [
+        [cell.configure(bg="yellow", text=" ") for cell in row_cell]
+        for row_cell in cells
+    ],
+)
+b3 = Button(
+    toolbar_frm,
+    text="random",
+    command=lambda: [
+        [
+            cell.configure(bg="lightgray" if random() < 0.5 else "yellow", text=" ")
+            for cell in row_cell
+        ]
+        for row_cell in cells
+    ],
+)
 board_type = StringVar(toolbar_frm, "3x3")
-OptionMenu(
+option = OptionMenu(
     toolbar_frm, board_type, *"1x5 2x2 3x3 4x4 5x5 6x6 7x7 8x8 48x48 nxn nxm".split()
-).pack(side="left", fill="both", expand=True, padx=10)
+)
+b1.pack(side="left", fill="both", expand=True, ipady=10)
+b2.pack(side="left", fill="both", expand=True, ipady=10)
+b3.pack(side="left", fill="both", expand=True, ipady=10)
+option.pack(side="left", fill="both", expand=True, padx=10)
 
 # cells
 width_num, height_num = 3, 3
@@ -74,7 +100,7 @@ def toggle_app_mode():
                     c.configure(
                         bg="yellow" if c.cget("bg") == "lightgray" else "lightgray",
                         text=c.cget("text")
-                        if c is not btn
+                        if c is not btn or not is_solution_clicked
                         else "⭕"
                         if btn.cget("text") == " "
                         else " ",
@@ -83,9 +109,11 @@ def toggle_app_mode():
                 ]
             )
 
-
-
     # hide 3 Buttons and show 1 button
+    b1.forget()
+    b2.forget()
+    b3.configure(text="New Board")
+
     # change Button text to "Editor"
     toogle_game_mode_btn.configure(text="Editor")
 
@@ -106,6 +134,8 @@ def mark_cells():
         for col, cell in enumerate(row_cells):
             cell.configure(text="⭕" if solution[row, col] == 1 else " ")
 
+    global is_solution_clicked
+    is_solution_clicked = True
     toggle_app_mode()
 
 
