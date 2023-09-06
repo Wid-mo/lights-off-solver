@@ -9,6 +9,34 @@ window.title("Lights off solver")
 window.geometry("{}x{}".format(45 * 9, 45 * 16))
 
 is_solution_clicked = False
+app_mode = "EDITOR" if not is_solution_clicked else "GAME"
+
+
+def set_new_board(sel: StringVar):
+    old_row, old_col = cells_frm.grid_size()
+    row, col = map(int, sel.split("x"))
+
+    cells_frm.rowconfigure(tuple(range(max(row, old_row))), weight=0)
+    cells_frm.rowconfigure(tuple(range(row)), weight=1)
+    cells_frm.columnconfigure(tuple(range(max(col, old_col))), weight=0)
+    cells_frm.columnconfigure(tuple(range(col)), weight=1)
+
+    for cell in cells_frm.grid_slaves():
+        cell.destroy()
+
+    cells = [
+        [Button(cells_frm, text=" ", bg="lightgray") for _ in range(row)]
+        for _ in range(col)
+    ]
+    for row, row_cells in enumerate(cells):
+        for col, cell in enumerate(row_cells):
+            cell.configure(
+                command=lambda btn=cell: btn.configure(
+                    bg="yellow" if btn.cget("bg") == "lightgray" else "lightgray"
+                )
+            )
+            cell.grid(row=row, column=col, sticky="nswe")
+
 
 # top toolbar
 toolbar_frm = Frame(window)
@@ -42,7 +70,10 @@ b3 = Button(
 )
 board_type = StringVar(toolbar_frm, "3x3")
 option = OptionMenu(
-    toolbar_frm, board_type, *"1x5 2x2 3x3 4x4 5x5 6x6 7x7 8x8 48x48 nxn nxm".split()
+    toolbar_frm,
+    board_type,
+    *"1x5 2x2 3x3 4x4 5x5 6x6 7x7 8x8 48x48 nxn nxm".split(),
+    command=set_new_board
 )
 b1.pack(side="left", fill="both", expand=True, ipady=10)
 b2.pack(side="left", fill="both", expand=True, ipady=10)
@@ -53,21 +84,35 @@ option.pack(side="left", fill="both", expand=True, padx=10)
 width_num, height_num = 3, 3
 cells_frm = Frame(window)
 cells_frm.pack(expand=True, fill="both")
-for row in range(height_num):
-    cells_frm.rowconfigure(row, weight=1)
-for col in range(width_num):
-    cells_frm.columnconfigure(col, weight=1)
+cells_frm.rowconfigure(tuple(range(height_num)), weight=1)
+cells_frm.columnconfigure(tuple(range(width_num)), weight=1)
+
 cells = [
     [Button(cells_frm, text=" ", bg="lightgray") for _ in range(height_num)]
     for _ in range(width_num)
 ]
 for row, row_cells in enumerate(cells):
     for col, cell in enumerate(row_cells):
-        cell.configure(
-            command=lambda btn=cell: btn.configure(
-                bg="yellow" if btn.cget("bg") == "lightgray" else "lightgray"
+        if app_mode == "EDITOR":
+            cell.configure(
+                command=lambda btn=cell: btn.configure(
+                    bg="yellow" if btn.cget("bg") == "lightgray" else "lightgray"
+                )
             )
-        )
+        elif app_mode == "GAME":
+            cell.configure(
+                command=lambda btn=cell, r=row, c=col: [
+                    c.configure(
+                        bg="yellow" if c.cget("bg") == "lightgray" else "lightgray",
+                        text=c.cget("text")
+                        if c is not btn or not is_solution_clicked
+                        else "⭕"
+                        if btn.cget("text") == " "
+                        else " ",
+                    )
+                    for c in [*get_neightbours_cells(r, c), btn]
+                ]
+            )
         cell.grid(row=row, column=col, sticky="nswe")
 
 
